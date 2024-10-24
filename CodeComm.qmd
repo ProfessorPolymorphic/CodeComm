@@ -1,0 +1,394 @@
+---
+title: "Potential Data Visualizations for Shep.Herd"
+author: "Barrie Robison"
+date: "2024-10-22"
+categories: [Education, Data Science, Data Visualization]
+code-fold: true
+---
+
+
+## Assessing Data Science Literacy in Shep.Herd
+
+The purpose of this post is to provide some example data visualizations that can be presented to the player of our new evolutionary video game, Shep.Herd.  The game features a generational evolutionary model, and between each generation the player can earn bonus resources if they correctly answer a data literacy question.
+
+The visualizations are separated by milestones related to game progress.  Some visualizations are not informative until the player has progressed through more than 5 generations.
+
+
+```{python}
+#| include: false
+
+# This code imports the libraries or packages necessary for my awesome analysis.  Note that if you are trying to run this in RStudio and your default render engine is KnitR, then you probably need to have the reticulate package installed.
+
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+import numpy as np
+
+```
+
+
+## Reading in the data
+
+For the purposes of this example, I'm using a data file called `newdata4.csv` from a single run of the game.  
+
+
+
+
+```{python}
+
+df = pd.read_csv('newdata4.csv')
+
+df_wave_0 = df[df['Wave Number'] == 0] # Some visualizations will focus only on the first generation (wave 0)
+
+df_wave_4 = df[df['Wave Number'] == 3] # Some visualizations will focus only on generations between 0 and 4 so we will use generation 3 as an example.
+
+
+```
+
+
+Each dataframe features 27 columns, and 300 observations per generation (one observation per enemy in the population).  The columns define a variety of traits and genes that are potenially under selection by the player's defenses.  There are also metadata related to the enemy ID, its parents, and the number of offspring it contributed to the next generation (that the player is about to face). 
+
+## After Generation 0
+
+After defeating the first generation, the player could be shown graphs summarizing a limited set of traits.  These could include Speed, Tower Atraction, Slime Attraction, and Turn Rate.  The two types of visualizations at this stage could be Histograms or Scatterplots.  The tabsets below show examples of these plots, and each is accompanied by some questions that could be used in the game to assess player data literacy.
+
+::: {.panel-tabset}
+
+## Trait Histograms
+
+```{python}
+
+
+
+# Define bin edges
+bin_edges = np.arange(0, 12.5, 0.5)
+
+# Create a histogram using plotly with custom bins
+# Note that my choice of the Speed Trait here was arbitrary.  I could have used other traits from the list.
+
+fig = go.Figure(data=[go.Histogram(
+    x=df_wave_0['Speed Trait'],
+    xbins=dict(
+        start=0,
+        end=12,
+        size=0.5
+    ),
+    autobinx=False
+)])
+
+# Update the layout for better readability
+
+fig.update_layout(
+    title='Histogram of Speed (Wave Number = 0)',
+    xaxis_title='Speed',
+    yaxis_title='Number of Slimes',
+    bargap=0.1,
+    xaxis=dict(
+        range=[0, 12],
+        tickmode='array',
+        tickvals=list(range(0, 13)),
+        ticktext=[f"{i:.1f}" for i in range(0, 13)]
+    )
+)
+
+# Save the plot as an HTML file
+fig.write_html('speed_histogram.html')
+
+# This will allow us to display the plot in Quarto
+fig.show()
+
+
+```
+
+
+
+
+1. **What is the correct name for this type of graph?**
+    - A. Scatterplot
+    - B. Histogram
+    - C. Regression Line
+    - D. Time Series
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** B. Histogram
+
+**Explanation:** A **Histogram** is a special type of bar chart that shows the frequency distribution of another variable.
+</details>
+
+
+22. **What is your best estimate of the range of the data for Speed?**
+    - A. 1.0 to 5.5
+    - B. 1.0 to 5.0
+    - C. 0.0 to 12.0
+    - D. 0.0 to 109.0
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** A. 1.0 to 5.5
+
+**Explanation:** Values of Speed are shown on the x axis, and the range is defined as the lowest and highest value of the variable.  The lowest value of Speed is in the 1.0 bin, and the highest value is in the 5.5 bin.
+</details>
+
+23. **What bin contains the Mode of the distribution for Speed?**
+    - A. 1.0 to 1.5
+    - B. 109 Slimes
+    - C. 2.0 to 2.5
+    - D. 6.0 to 6.5
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** C. 2.0 to 2.5
+
+**Explanation:** The Mode of a distribution is its most frequently observed value.  In this case, the 2.0 to 2.5 bin contains the most slimes.
+</details>
+
+
+## Scatterplots
+
+```{python}
+
+
+
+# Create a scatterplot using plotly.  Again, the choice of traits here is arbitrary.
+fig = px.scatter(df_wave_0, 
+                 x='Speed Trait', 
+                 y='Tower Attraction Trait',
+                 title='Scatterplot of Speed Trait vs Tower Attraction (Wave Number = 0)')
+
+# Update the layout for better readability
+fig.update_layout(
+    xaxis_title='Speed Trait',
+    yaxis_title='Tower Attraction Trait',
+    xaxis=dict(range=[0, 6]),  # Adjusting based on the histogram range
+)
+
+# Save the plot as an HTML file
+fig.write_html('speed_tower_scatterplot.html')
+
+# Display the plot
+fig.show()
+
+# Print some information about the filtered dataset
+print(f"Number of observations with Wave Number 0: {len(df_wave_0)}")
+print(f"Correlation between Speed Trait and Tower Attraction Trait:")
+print(df_wave_0[['Speed Trait', 'Tower Attraction Trait']].corr())
+
+```
+
+
+
+1. **What type of relationship appears to exist between Speed Trait and Tower Attraction Trait?**
+    - A. Strong positive correlation
+    - B. Strong negative correlation
+    - C. Weak positive correlation
+    - D. No clear correlation
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** D. No clear correlation
+**Explanation:** The scatterplot shows no clear pattern or trend between Speed Trait and Tower Attraction Trait, indicating no clear correlation between these variables.
+</details>
+
+2. **What is the approximate range of values for the Tower Attraction Trait?**
+    - A. 0 to 6
+    - B. 0 to 12
+    - C. -6 to 6
+    - D. -12 to 12
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** C. -6 to 6
+**Explanation:** The y-axis of the scatterplot, which represents the Tower Attraction Trait, appears to range from approximately -6 to 6.
+</details>
+
+3. **On this graph, what does each individual point (circle) represent?**
+    - A. The maximum value of [Trait 1] and [Trait 2] from all previous Generations of slimes.
+    - B. The average values of the Traits for each slime from Generation X.
+    - C. The exact values of [Trait 1] and [Trait 2] for each slime from Generation X.
+    - D. The probability that each Slime will reproduce this generation.
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** C. The exact values of [Trait 1] and [Trait 2] for each slime from Generation X.
+**Explanation:** This is a scatter plot of trait values from the previous generation.  A scatterplot plots exact values for two quantitative variables (Traits) on two orthogonal axes.  
+</details>
+
+:::
+
+## After Generation 3
+
+After playing the game for a few generations, additional visualizations are possible.  In particular, the player will notice the emergence of different enemy types (all enemies start as basic in gen 0).  The enemy types are Basic, Blaster, Ice, Fire, Laser, and Acid.  The type is specified in the Main Type column.
+
+::: {.panel-tabset}
+
+## Type charts
+
+Here we introduce visualizations related to discrete data (Type) and count data (frequency).
+
+```{python}
+
+# Define the custom color palette.  I hated the defaults.
+color_palette = {
+    'Basic': '#D3D3D3',  # Light grey
+    'Blaster': '#8B0000',  # Dark reddish grey
+    'Ice': '#1E90FF',  # Blue
+    'Fire': '#FFA500',  # Orange
+    'Laser': '#800080',  # Purple
+    'Acid': '#00FF00'  # Green
+}
+
+# Count the frequency of each Main Type
+main_type_counts = df_wave_4['Main Type'].value_counts().reset_index()
+main_type_counts.columns = ['Main Type', 'Count']
+
+# Create a column chart using plotly with custom colors
+fig = px.bar(main_type_counts, x='Main Type', y='Count',
+             title='Distribution of Main Types (Wave Number = 4)',
+             color='Main Type',
+             color_discrete_map=color_palette)
+
+# Update the layout for better readability
+fig.update_layout(
+    xaxis_title='Main Type',
+    yaxis_title='Number of Slimes',
+    xaxis_tickangle=-45
+)
+
+# Save the plot as an HTML file
+fig.write_html('main_type_distribution_colored.html')
+
+# Display the plot
+fig.show()
+
+
+```
+
+We should totally do a bargraph race at the end of the game!  Plus other animated graphs!
+
+
+1. **What is the correct name for this type of graph?**
+    - A. Scatterplot
+    - B. Bar Chart
+    - C. Regression Line
+    - D. Time Series
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** B. Bar Chart
+
+**Explanation:** A **Bar Chart** is used to represent a quantitative variable (the height of the bar) for a set of discrete groups (arranged on the x axis).  
+</details>
+
+
+22. **What is your best estimate of the number of Blaster type slimes?**
+    - A. 11
+    - B. 1
+    - C. 0 to 300
+    - D. 46
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** A. 11
+
+**Explanation:** The number of slimes for each type is represented by the height of each bar.  Try hovering over the Blaster type bar to see its corresponding value for the y axis.
+</details>
+
+23. **What type of slime is the least frequent in the population?**
+    - A. Blaster
+    - B. Basic
+    - C. Acid
+    - D. Fire
+
+<details>
+<summary>Click to see the answer</summary>
+
+**Answer:** D. Fire
+
+**Explanation:** The least frequent slime type is the represented by the bar with the lowest value.  In this case, there are only XXX fire slimes, a number lower than all the other groups.
+</details>
+
+
+## Fitness Charts
+
+Now that a few generations have passed, we can introduce the concept of fitness.  In this case, the enemies are being evaluated by how close they are getting to the space sheep.  We can use a scatterplot to show the player the relationship between fitness and the number of offspring produced by each enemy.
+
+```{python}
+
+
+
+# Create a scatterplot using plotly
+fig = px.scatter(df_wave_4, 
+                 x='Sheep Distance Fitness', 
+                 y='Offspring Count',
+                 title='Scatterplot of Fitness Trait vs number of Offspring (Wave Number = 4)')
+
+# Update the layout for better readability
+fig.update_layout(
+    xaxis_title='Sheep Fitness',
+    yaxis_title='Offspring'
+)
+
+# Save the plot as an HTML file
+fig.write_html('fit_babies_scatterplot.html')
+
+# Display the plot
+fig.show()
+
+
+
+```
+
+
+
+1. **What type of relationship appears to exist between Fitness trait and number of Offspring?**
+    - A. Strong positive correlation
+    - B. Strong negative correlation
+    - C. Weak positive correlation
+    - D. No clear correlation
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** A. Strong positive correlation
+
+**Explanation:** The scatterplot shows a strong positive correlation between Fitness and offspring.
+</details>
+
+2. **What is the approximate range of values for the number of offspring?**
+    - A. 0 to 6
+    - B. 0 to 12
+    - C. -6 to 6
+    - D. -12 to 12
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** B. 0 to 12
+
+**Explanation:** The y-axis of the scatterplot represents the number of offspring. The lowest point value is at zero and the highest is 12.
+</details>
+
+3. **On this graph, what does each individual point (circle) represent?**
+    - A. The maximum value of [Trait 1] and [Trait 2] from all previous Generations of slimes.
+    - B. The average values of the Traits for each slime from Generation X.
+    - C. The exact values of [Trait 1] and [Trait 2] for each slime from Generation X.
+    - D. The probability that each Slime will reproduce this generation.
+<details>
+<summary>Click to see the answer</summary>
+**Answer:** C. The exact values of [Trait 1] and [Trait 2] for each slime from Generation X.
+
+**Explanation:** This is a scatter plot of trait values from the previous generation.  A scatterplot plots exact values for two quantitative variables (Traits) on two orthogonal axes.  
+</details>
+
+:::
+
+---
+title: "CodeComm"
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r}
+1 + 1
+```
